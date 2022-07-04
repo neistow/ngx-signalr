@@ -29,6 +29,6 @@ jobs:
         run: yarn run build
 
       - name: Publish
-        run: npm publish --access public --dry-run ./dist/@neistow/ngx-signalr
+        run: npm publish --access public ./dist/@neistow/ngx-signalr
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
