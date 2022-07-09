@@ -1,7 +1,7 @@
 import { HubFactory, IHubConnection } from '../lib/hub-factory';
 import { TestBed } from '@angular/core/testing';
 import { NgxSignalrModule } from '../lib/ngx-signalr.module';
-import { firstValueFrom, Observable } from 'rxjs';
+import { lastValueFrom, Observable } from 'rxjs';
 import {
   HUB_BASE_URL,
   HUB_CONNECTION_OPTIONS,
@@ -90,7 +90,8 @@ describe('HubFactory', () => {
       .toBeTruthy();
 
     hub.connect();
-    await firstValueFrom(hub.invoke.TestCommand(42, 'str'))
+    // use lastValueFrom in order to check if observable completes
+    await lastValueFrom(hub.invoke.TestCommand(42, 'str'))
     expect(spyConnection.invoke)
       .toHaveBeenCalledOnceWith('TestCommand', 42, 'str');
   });
@@ -101,7 +102,8 @@ describe('HubFactory', () => {
       .toBeTruthy();
 
     hub.connect();
-    await firstValueFrom(hub.send.TestCommand(42, 'str'))
+    // use lastValueFrom in order to check if observable completes
+    await lastValueFrom(hub.send.TestCommand(42, 'str'))
     expect(spyConnection.send)
       .toHaveBeenCalledOnceWith('TestCommand', 42, 'str');
   });

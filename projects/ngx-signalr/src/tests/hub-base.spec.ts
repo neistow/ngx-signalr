@@ -1,6 +1,6 @@
 import { IHubConnection } from '../lib/hub-factory';
 import { HubBase } from '../lib/hub-base';
-import { firstValueFrom} from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 
 
 describe('HubBase', () => {
@@ -43,7 +43,8 @@ describe('HubBase', () => {
     const args = [42, 'arg'];
 
     hubBase.connect();
-    await firstValueFrom(hubBase.sendCore(methodName, ...args));
+    // use lastValueFrom in order to check if observable completes
+    await lastValueFrom(hubBase.sendCore(methodName, ...args));
 
     expect(connectionSpy.send)
       .withContext('spy connection send called once with correct methodName and args')
@@ -55,7 +56,8 @@ describe('HubBase', () => {
     const args = [42, 'arg'];
 
     hubBase.connect();
-    await firstValueFrom(hubBase.invokeCore(methodName, ...args));
+    // use lastValueFrom in order to check if observable completes
+    await lastValueFrom(hubBase.invokeCore(methodName, ...args));
 
     expect(connectionSpy.invoke)
       .withContext('spy connection invoke called once with correct methodName and args')

@@ -3,7 +3,8 @@ import {
   Observable,
   ReplaySubject,
   shareReplay,
-  switchMapTo
+  switchMapTo,
+  take
 } from 'rxjs';
 import { IHubConnection } from './hub-factory';
 
@@ -71,7 +72,8 @@ export class HubBase {
 
   private whenReady(obs: Observable<any>): Observable<any> {
     return this.connectionStarted.pipe(
-      switchMapTo(obs)
+      switchMapTo(obs),
+      take(1)
     )
   }
 }
