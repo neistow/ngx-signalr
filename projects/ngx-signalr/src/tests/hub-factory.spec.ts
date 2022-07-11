@@ -2,6 +2,7 @@ import { HubFactory, IHubConnection } from '../lib/hub-factory';
 import { TestBed } from '@angular/core/testing';
 import { NgxSignalrModule } from '../lib/ngx-signalr.module';
 import { lastValueFrom, Observable } from 'rxjs';
+import { Injector } from '@angular/core';
 import {
   HUB_BASE_URL,
   HUB_CONNECTION_OPTIONS,
@@ -9,22 +10,28 @@ import {
   HUB_METHOD_NAMING_POLICY,
   HUB_RETRY_POLICY
 } from '../lib/injection-tokens';
-import { DefaultMethodNamingPolicy, MethodNamingPolicy } from '../lib/default-method-naming-policy';
-import { Inject } from '@angular/core';
-import { IHttpConnectionOptions, IRetryPolicy, LogLevel } from '@microsoft/signalr';
-import { DefaultRetryPolicy } from '../lib/default-retry-policy';
 
-class HubFactoryForTesting extends HubFactory {
+interface TestHubCommands {
+  TestCommand(arg1: number, arg2: string): Observable<string>;
+}
+
+interface TestHubEvents {
+  TestEvent: Observable<[number, string]>;
+}
+
+class HubFactoryWithFakeConnection extends HubFactory {
 
   constructor(
     private connection: IHubConnection,
-    @Inject(HUB_BASE_URL) baseUrl: string,
-    @Inject(HUB_LOG_LEVEL) logLevel: LogLevel,
-    @Inject(HUB_RETRY_POLICY) retryPolicy: IRetryPolicy,
-    @Inject(HUB_CONNECTION_OPTIONS) connectionOptions: IHttpConnectionOptions,
-    @Inject(HUB_METHOD_NAMING_POLICY) methodNamingPolicy: MethodNamingPolicy,
+    private injector: Injector
   ) {
-    super(baseUrl, logLevel, retryPolicy, connectionOptions, methodNamingPolicy);
+    super(
+      injector.get(HUB_BASE_URL),
+      injector.get(HUB_LOG_LEVEL),
+      injector.get(HUB_RETRY_POLICY),
+      injector.get(HUB_CONNECTION_OPTIONS),
+      injector.get(HUB_METHOD_NAMING_POLICY),
+    );
   }
 
   protected override createConnection(hubName: string): IHubConnection {
@@ -65,13 +72,8 @@ describe('HubFactory', () => {
       providers: [
         {
           provide: HubFactory,
-          useFactory: () => new HubFactoryForTesting(
-            spyConnection, '',
-            LogLevel.None,
-            new DefaultRetryPolicy(),
-            {},
-            DefaultMethodNamingPolicy),
-
+          useFactory: (injector: Injector) => new HubFactoryWithFakeConnection(spyConnection, injector),
+          deps: [Injector]
         }
       ]
     });
@@ -124,11 +126,3 @@ describe('HubFactory', () => {
       .toHaveBeenCalledTimes(1);
   });
 });
-
-interface TestHubCommands {
-  TestCommand(arg1: number, arg2: string): Observable<string>;
-}
-
-interface TestHubEvents {
-  TestEvent: Observable<[number, string]>;
-}
