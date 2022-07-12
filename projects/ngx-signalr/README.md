@@ -35,7 +35,7 @@ Create interfaces that mock defined SignalR hub method on your server:
 
 ```typescript
 export interface MyHubCommands {
-  Throw(message: string): Observable<string>;
+  throw(message: string): Observable<string>;
 }
 
 export interface MyHubEvents {
@@ -77,6 +77,57 @@ export class AppComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.testHub.disconnect();
+  }
+}
+```
+
+#### 4. Alternative usage
+
+If your child components need to use your hub you can use `provideHub` helper function
+to leverage angular local providers. `provideHub` function accepts injection token of your hub
+and hub name as a parameters and creates a provider under the hood using `HubFactory`.
+
+The only thing you left to do is inject hub via token in parent and descendants.
+Hub instance will the same during all injections.
+
+```typescript
+
+// 0. Describe interfaces
+interface MyHubCommands {
+  doSomething(): Observable<void>;
+}
+
+interface MyHubEvents {
+  listenToSomething: Observable<Date>;
+}
+type MyHub = Hub<MyHubCommands, MyHubEvents>;
+
+// 1. Create hub injection token
+const MY_HUB_TOKEN = new InjectionToken<MyHub>('My Hub');
+
+@Component({
+  selector: 'app-parent',
+  templateUrl: './app-parent.component.html',
+  styleUrls: ['./app-parent.component.scss'],
+  providers: [
+    provideHub(MY_HUB_TOKEN, 'my-hub')
+  ]
+})
+export class AppParentComponent implements OnInit, OnDestroy {
+  
+  // 2. Inject hub by crearted token
+  constructor(
+      @Inject(MY_HUB_TOKEN) private myHub: MyHub
+  ) {
+  }
+
+  // 3. Use it!
+  public ngOnInit(): void {
+    this.myHub.connect();
+  }
+
+  public ngOnDestroy(): void {
+    this.myHub.disconnect();
   }
 }
 ```
